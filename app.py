@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-LANGFLOW_API_URL = "http://gmc-platform0.eastus.cloudapp.azure.com:7860/api/v1/run/298f4a01-26eb-436c-bac3-4c1cbfcc9e67?stream=false"
+LANGFLOW_API_URL = "http://gmc-platform0.eastus.cloudapp.azure.com:7860/api/v1/run/25ca2bf5-b646-461c-b4a7-545a01c9ff91?stream=false"
 
 @app.route('/')
 def home():
@@ -28,23 +28,45 @@ def chat():
         if response.status_code == 200:
             data = response.json()
             
-            # Safely extract the chatbot's response
+            # Extract chatbot response with safe parsing
             try:
-                # Navigate the JSON response structure
-                reply = (
-                    data["outputs"][0]["outputs"][0]["results"]["message"]["text"]
-                )
+                raw_reply = data["outputs"][0]["outputs"][0]["results"]["message"]["text"]
             except (IndexError, KeyError, TypeError) as e:
                 print(f"Error parsing Langflow response: {e}")
                 print(f"Full response content: {data}")  # Log full response for debugging
-                reply = "The Langflow API returned an unexpected response format."
+                return jsonify({'error': "The Langflow API returned an unexpected response format."}), 500
+            
+            # Format response with balanced spacing
+            formatted_reply = format_response(raw_reply)
 
-            return jsonify({'reply': reply})
+            return jsonify({'reply': formatted_reply})
+
         else:
             return jsonify({'error': f'Langflow API returned status code {response.status_code}'}), response.status_code
 
     except requests.exceptions.RequestException as e:
         return jsonify({'error': f'Error contacting Langflow API: {e}'}), 500
+
+
+def format_response(response_text):
+    """
+    Formats the Langflow response for readability while preventing excessive line breaks.
+    """
+    # Apply structured formatting with balanced spacing
+    response_text = response_text.replace("### Summary of Key Metrics:", "**📊 Summary of Key Metrics**\n")
+    response_text = response_text.replace("### Interesting Insights:", "\n**💡 Interesting Insights**\n")
+    response_text = response_text.replace("### Recurring Accounts:", "\n**🔄 Recurring Accounts**\n")
+    response_text = response_text.replace("### Additional Observations:", "\n**📌 Additional Observations**\n")
+
+    # Properly space bullet points while avoiding excessive blank lines
+    response_text = response_text.replace("- **", "\n✅ **")  # Major bullet points
+    response_text = response_text.replace("- ", "\n🔹 ")  # Minor bullet points
+
+    # Reduce excessive consecutive newlines while preserving paragraph breaks
+    response_text = "\n".join([line.strip() for line in response_text.splitlines() if line.strip()])
+
+    return response_text.strip()
+
 
 if __name__ == '__main__':
     app.run(debug=True)
