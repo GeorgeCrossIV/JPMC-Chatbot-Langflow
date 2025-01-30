@@ -1,0 +1,17 @@
+[
+    // AllowAllAuthenticator
+    {
+        "name": "Cluster AllowAllAuthenticator",
+        "contactPoints": ["135.237.97.52"]
+    },
+    //PasswordAuthenticator
+    {
+        "name": "Cluster PasswordAuthenticator",
+        "contactPoints": ["135.237.97.52"],
+        "authProvider": {
+            "class": "PasswordAuthenticator",
+            "username": "demo-superuser",
+            "password": "password"
+        }
+    }
+]

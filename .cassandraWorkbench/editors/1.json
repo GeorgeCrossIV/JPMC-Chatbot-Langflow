@@ -1,0 +1,1 @@
+{"id":"4MH6m8xDPbUQklp2","body":"  SELECT row_id, attributes_blob, body_blob, metadata_s, vector\n  FROM transactions_keyspace.vector_store\n  LIMIT 10;","filename":"script_1.cql","clusterName":"Cluster PasswordAuthenticator","keyspace":"transactions_keyspace","source":"action","modified":true}
