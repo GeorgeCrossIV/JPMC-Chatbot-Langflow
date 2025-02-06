@@ -7,7 +7,7 @@
     //PasswordAuthenticator
     {
         "name": "Cluster PasswordAuthenticator",
-        "contactPoints": ["135.237.97.52"],
+        "contactPoints": ["20.51.217.229"],
         "authProvider": {
             "class": "PasswordAuthenticator",
             "username": "demo-superuser",

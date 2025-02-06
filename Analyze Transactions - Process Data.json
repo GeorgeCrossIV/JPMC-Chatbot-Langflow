@@ -1,0 +1,1470 @@
+{
+  "id": "3ccf4fa1-6f1f-48bf-a327-7069b608a304",
+  "data": {
+    "nodes": [
+      {
+        "id": "CSVLoader-yuTmY",
+        "type": "genericNode",
+        "position": {
+          "x": 816.9146138466086,
+          "y": 955.1905123881473
+        },
+        "data": {
+          "node": {
+            "template": {
+              "_type": "Component",
+              "file_content": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "trace_as_input": true,
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "file_content",
+                "value": "",
+                "display_name": "File Content",
+                "advanced": false,
+                "input_types": [
+                  "Data"
+                ],
+                "dynamic": false,
+                "info": "The raw content of the CSV file or a list of contents.",
+                "title_case": false,
+                "type": "other",
+                "_input_type": "DataInput"
+              },
+              "code": {
+                "type": "code",
+                "required": true,
+                "placeholder": "",
+                "list": false,
+                "show": true,
+                "multiline": true,
+                "value": "from langflow.custom import Component\nfrom langflow.io import DataInput, Output\nfrom langflow.schema import Data\nimport pandas as pd\nfrom io import StringIO\n\n\nclass CSVLoaderComponent(Component):\n    # Metadata for the component\n    display_name = \"CSV Loader\"\n    description = \"Parses the content of a CSV file into a list of formatted records.\"\n    documentation: str = \"http://docs.langflow.org/components/custom\"\n    icon = \"table\"\n    name = \"CSVLoader\"\n\n    # Inputs: Define the input fields for the component\n    inputs = [\n        DataInput(\n            name=\"file_content\",\n            display_name=\"File Content\",\n            info=\"The raw content of the CSV file or a list of contents.\",\n        ),\n    ]\n\n    # Outputs: Define the output fields for the component\n    outputs = [\n        Output(\n            name=\"formatted_output\",\n            display_name=\"Formatted Output\",\n            method=\"process_csv\",\n        ),\n    ]\n\n    # Component logic: Define the method to process the CSV\n    def process_csv(self) -> list[Data]:\n        # Ensure file content is provided\n        if not hasattr(self, \"file_content\") or not self.file_content:\n            raise ValueError(\"No file content provided.\")\n\n        formatted_output = []\n\n        # Handle multiple or single file contents\n        if isinstance(self.file_content, list):\n            for content in self.file_content:\n                formatted_output.extend(self._process_single_csv(content))\n        else:\n            formatted_output.extend(self._process_single_csv(self.file_content))\n\n        return formatted_output\n\n    def _process_single_csv(self, content) -> list[Data]:\n        \"\"\"Process a single CSV file content.\"\"\"\n        try:\n            # Handle file content with a .text attribute or plain strings\n            if hasattr(content, \"text\"):\n                content = content.text\n            elif isinstance(content, str):\n                pass  # Content is already a string\n            else:\n                raise ValueError(\n                    \"file_content must be a string or an object with a .text attribute.\"\n                )\n\n            # Ensure the content is not empty\n            if not content.strip():\n                raise ValueError(\"The provided file content is empty.\")\n\n            # Parse the CSV content using Pandas\n            df = pd.read_csv(\n                StringIO(content),\n                header=0,  # Assumes the first row contains headers\n                on_bad_lines=\"warn\",  # Skip malformed lines and warn\n            )\n\n            # Handle null values in the DataFrame\n            df.fillna(\"\", inplace=True)\n\n            # Convert each row in the DataFrame to a dictionary with metadata\n            formatted_output = []\n            for _, row in df.iterrows():\n                chunk_data = {\n                    \"text\": str(row.to_dict()),  # Convert the row to a dictionary and stringify\n                    \"metadata\": row.to_dict(),  # Metadata contains the original row data\n                }\n                formatted_output.append(Data(text=chunk_data[\"text\"], data=chunk_data[\"metadata\"]))\n\n            return formatted_output\n\n        except pd.errors.ParserError as e:\n            raise ValueError(f\"Error parsing CSV content: {str(e)}\")\n        except Exception as e:\n            raise ValueError(f\"Unexpected error processing CSV content: {str(e)}\")\n",
+                "fileTypes": [],
+                "file_path": "",
+                "password": false,
+                "name": "code",
+                "advanced": true,
+                "dynamic": true,
+                "info": "",
+                "load_from_db": false,
+                "title_case": false
+              }
+            },
+            "description": "Parses the content of a CSV file into a list of formatted records.",
+            "icon": "table",
+            "base_classes": [
+              "Data"
+            ],
+            "display_name": "CSV Loader",
+            "documentation": "http://docs.langflow.org/components/custom",
+            "minimized": false,
+            "custom_fields": {},
+            "output_types": [],
+            "pinned": false,
+            "conditional_paths": [],
+            "frozen": false,
+            "outputs": [
+              {
+                "types": [
+                  "Data"
+                ],
+                "selected": "Data",
+                "name": "formatted_output",
+                "hidden": null,
+                "display_name": "Formatted Output",
+                "method": "process_csv",
+                "value": "__UNDEFINED__",
+                "cache": true,
+                "required_inputs": null,
+                "allows_loop": false
+              }
+            ],
+            "field_order": [
+              "file_content"
+            ],
+            "beta": false,
+            "legacy": false,
+            "edited": true,
+            "metadata": {},
+            "tool_mode": false,
+            "lf_version": "1.1.3"
+          },
+          "type": "CSVLoader",
+          "id": "CSVLoader-yuTmY"
+        },
+        "selected": false,
+        "measured": {
+          "width": 320,
+          "height": 210
+        }
+      },
+      {
+        "id": "File-TrMg4",
+        "type": "genericNode",
+        "position": {
+          "x": 442.13758681958166,
+          "y": 998.0337556313905
+        },
+        "data": {
+          "node": {
+            "template": {
+              "_type": "Component",
+              "file_path": {
+                "trace_as_metadata": true,
+                "list": true,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "file_path",
+                "value": "",
+                "display_name": "Server File Path",
+                "advanced": true,
+                "input_types": [
+                  "Data",
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Data object with a 'file_path' property pointing to server file or a Message object with a path to the file. Supercedes 'Path' but supports same file types.",
+                "title_case": false,
+                "type": "other",
+                "_input_type": "HandleInput"
+              },
+              "path": {
+                "trace_as_metadata": true,
+                "file_path": "1eb0259b-d63d-46ec-8bd4-f17f1245fc3a/2025-02-06_20-02-27_Transactions2024.csv",
+                "fileTypes": [
+                  "txt",
+                  "md",
+                  "mdx",
+                  "csv",
+                  "json",
+                  "yaml",
+                  "yml",
+                  "xml",
+                  "html",
+                  "htm",
+                  "pdf",
+                  "docx",
+                  "py",
+                  "sh",
+                  "sql",
+                  "js",
+                  "ts",
+                  "tsx",
+                  "zip",
+                  "tar",
+                  "tgz",
+                  "bz2",
+                  "gz"
+                ],
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "path",
+                "value": "",
+                "display_name": "Path",
+                "advanced": false,
+                "dynamic": false,
+                "info": "Supported file extensions: txt, md, mdx, csv, json, yaml, yml, xml, html, htm, pdf, docx, py, sh, sql, js, ts, tsx; optionally bundled in file extensions: zip, tar, tgz, bz2, gz",
+                "title_case": false,
+                "type": "file",
+                "_input_type": "FileInput"
+              },
+              "code": {
+                "type": "code",
+                "required": true,
+                "placeholder": "",
+                "list": false,
+                "show": true,
+                "multiline": true,
+                "value": "from langflow.base.data import BaseFileComponent\nfrom langflow.base.data.utils import TEXT_FILE_TYPES, parallel_load_data, parse_text_file_to_data\nfrom langflow.io import BoolInput, IntInput\nfrom langflow.schema import Data\n\n\nclass FileComponent(BaseFileComponent):\n    \"\"\"Handles loading and processing of individual or zipped text files.\n\n    This component supports processing multiple valid files within a zip archive,\n    resolving paths, validating file types, and optionally using multithreading for processing.\n    \"\"\"\n\n    display_name = \"File\"\n    description = \"Load a file to be used in your project.\"\n    icon = \"file-text\"\n    name = \"File\"\n\n    VALID_EXTENSIONS = TEXT_FILE_TYPES\n\n    inputs = [\n        *BaseFileComponent._base_inputs,\n        BoolInput(\n            name=\"use_multithreading\",\n            display_name=\"[Deprecated] Use Multithreading\",\n            advanced=True,\n            value=True,\n            info=\"Set 'Processing Concurrency' greater than 1 to enable multithreading.\",\n        ),\n        IntInput(\n            name=\"concurrency_multithreading\",\n            display_name=\"Processing Concurrency\",\n            advanced=True,\n            info=\"When multiple files are being processed, the number of files to process concurrently.\",\n            value=1,\n        ),\n    ]\n\n    outputs = [\n        *BaseFileComponent._base_outputs,\n    ]\n\n    def process_files(self, file_list: list[BaseFileComponent.BaseFile]) -> list[BaseFileComponent.BaseFile]:\n        \"\"\"Processes files either sequentially or in parallel, depending on concurrency settings.\n\n        Args:\n            file_list (list[BaseFileComponent.BaseFile]): List of files to process.\n\n        Returns:\n            list[BaseFileComponent.BaseFile]: Updated list of files with merged data.\n        \"\"\"\n\n        def process_file(file_path: str, *, silent_errors: bool = False) -> Data | None:\n            \"\"\"Processes a single file and returns its Data object.\"\"\"\n            try:\n                return parse_text_file_to_data(file_path, silent_errors=silent_errors)\n            except FileNotFoundError as e:\n                msg = f\"File not found: {file_path}. Error: {e}\"\n                self.log(msg)\n                if not silent_errors:\n                    raise\n                return None\n            except Exception as e:\n                msg = f\"Unexpected error processing {file_path}: {e}\"\n                self.log(msg)\n                if not silent_errors:\n                    raise\n                return None\n\n        if not file_list:\n            msg = \"No files to process.\"\n            raise ValueError(msg)\n\n        concurrency = 1 if not self.use_multithreading else max(1, self.concurrency_multithreading)\n        file_count = len(file_list)\n\n        parallel_processing_threshold = 2\n        if concurrency < parallel_processing_threshold or file_count < parallel_processing_threshold:\n            if file_count > 1:\n                self.log(f\"Processing {file_count} files sequentially.\")\n            processed_data = [process_file(str(file.path), silent_errors=self.silent_errors) for file in file_list]\n        else:\n            self.log(f\"Starting parallel processing of {file_count} files with concurrency: {concurrency}.\")\n            file_paths = [str(file.path) for file in file_list]\n            processed_data = parallel_load_data(\n                file_paths,\n                silent_errors=self.silent_errors,\n                load_function=process_file,\n                max_concurrency=concurrency,\n            )\n\n        # Use rollup_basefile_data to merge processed data with BaseFile objects\n        return self.rollup_data(file_list, processed_data)\n",
+                "fileTypes": [],
+                "file_path": "",
+                "password": false,
+                "name": "code",
+                "advanced": true,
+                "dynamic": true,
+                "info": "",
+                "load_from_db": false,
+                "title_case": false
+              },
+              "concurrency_multithreading": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "concurrency_multithreading",
+                "value": 4,
+                "display_name": "Processing Concurrency",
+                "advanced": true,
+                "dynamic": false,
+                "info": "When multiple files are being processed, the number of files to process concurrently.",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput",
+                "load_from_db": false
+              },
+              "delete_server_file_after_processing": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "delete_server_file_after_processing",
+                "value": true,
+                "display_name": "Delete Server File After Processing",
+                "advanced": true,
+                "dynamic": false,
+                "info": "If true, the Server File Path will be deleted after processing.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "ignore_unspecified_files": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "ignore_unspecified_files",
+                "value": false,
+                "display_name": "Ignore Unspecified Files",
+                "advanced": true,
+                "dynamic": false,
+                "info": "If true, Data with no 'file_path' property will be ignored.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "ignore_unsupported_extensions": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "ignore_unsupported_extensions",
+                "value": true,
+                "display_name": "Ignore Unsupported Extensions",
+                "advanced": true,
+                "dynamic": false,
+                "info": "If true, files with unsupported extensions will not be processed.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "silent_errors": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "silent_errors",
+                "value": false,
+                "display_name": "Silent Errors",
+                "advanced": true,
+                "dynamic": false,
+                "info": "If true, errors will not raise an exception.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "use_multithreading": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "use_multithreading",
+                "value": false,
+                "display_name": "[Deprecated] Use Multithreading",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Set 'Processing Concurrency' greater than 1 to enable multithreading.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput",
+                "load_from_db": false
+              }
+            },
+            "description": "Load a file to be used in your project.",
+            "icon": "file-text",
+            "base_classes": [
+              "Data"
+            ],
+            "display_name": "File",
+            "documentation": "",
+            "minimized": false,
+            "custom_fields": {},
+            "output_types": [],
+            "pinned": false,
+            "conditional_paths": [],
+            "frozen": false,
+            "outputs": [
+              {
+                "types": [
+                  "Data"
+                ],
+                "selected": "Data",
+                "name": "data",
+                "hidden": null,
+                "display_name": "Data",
+                "method": "load_files",
+                "value": "__UNDEFINED__",
+                "cache": true,
+                "required_inputs": [],
+                "allows_loop": false
+              }
+            ],
+            "field_order": [
+              "path",
+              "file_path",
+              "silent_errors",
+              "delete_server_file_after_processing",
+              "ignore_unsupported_extensions",
+              "ignore_unspecified_files",
+              "use_multithreading",
+              "concurrency_multithreading"
+            ],
+            "beta": false,
+            "legacy": false,
+            "edited": false,
+            "metadata": {},
+            "tool_mode": false,
+            "lf_version": "1.1.3"
+          },
+          "type": "File",
+          "id": "File-TrMg4"
+        },
+        "selected": false,
+        "measured": {
+          "width": 320,
+          "height": 226
+        }
+      },
+      {
+        "id": "OpenAIEmbeddings-Ag6y3",
+        "type": "genericNode",
+        "position": {
+          "x": 813.3613636401856,
+          "y": 1247.961996340837
+        },
+        "data": {
+          "node": {
+            "template": {
+              "_type": "Component",
+              "chunk_size": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "chunk_size",
+                "value": 1000,
+                "display_name": "Chunk Size",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "client": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "client",
+                "value": "",
+                "display_name": "Client",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "code": {
+                "type": "code",
+                "required": true,
+                "placeholder": "",
+                "list": false,
+                "show": true,
+                "multiline": true,
+                "value": "from langchain_openai import OpenAIEmbeddings\n\nfrom langflow.base.embeddings.model import LCEmbeddingsModel\nfrom langflow.base.models.openai_constants import OPENAI_EMBEDDING_MODEL_NAMES\nfrom langflow.field_typing import Embeddings\nfrom langflow.io import BoolInput, DictInput, DropdownInput, FloatInput, IntInput, MessageTextInput, SecretStrInput\n\n\nclass OpenAIEmbeddingsComponent(LCEmbeddingsModel):\n    display_name = \"OpenAI Embeddings\"\n    description = \"Generate embeddings using OpenAI models.\"\n    icon = \"OpenAI\"\n    name = \"OpenAIEmbeddings\"\n\n    inputs = [\n        DictInput(\n            name=\"default_headers\",\n            display_name=\"Default Headers\",\n            advanced=True,\n            info=\"Default headers to use for the API request.\",\n        ),\n        DictInput(\n            name=\"default_query\",\n            display_name=\"Default Query\",\n            advanced=True,\n            info=\"Default query parameters to use for the API request.\",\n        ),\n        IntInput(name=\"chunk_size\", display_name=\"Chunk Size\", advanced=True, value=1000),\n        MessageTextInput(name=\"client\", display_name=\"Client\", advanced=True),\n        MessageTextInput(name=\"deployment\", display_name=\"Deployment\", advanced=True),\n        IntInput(name=\"embedding_ctx_length\", display_name=\"Embedding Context Length\", advanced=True, value=1536),\n        IntInput(name=\"max_retries\", display_name=\"Max Retries\", value=3, advanced=True),\n        DropdownInput(\n            name=\"model\",\n            display_name=\"Model\",\n            advanced=False,\n            options=OPENAI_EMBEDDING_MODEL_NAMES,\n            value=\"text-embedding-3-small\",\n        ),\n        DictInput(name=\"model_kwargs\", display_name=\"Model Kwargs\", advanced=True),\n        SecretStrInput(name=\"openai_api_key\", display_name=\"OpenAI API Key\", value=\"OPENAI_API_KEY\", required=True),\n        MessageTextInput(name=\"openai_api_base\", display_name=\"OpenAI API Base\", advanced=True),\n        MessageTextInput(name=\"openai_api_type\", display_name=\"OpenAI API Type\", advanced=True),\n        MessageTextInput(name=\"openai_api_version\", display_name=\"OpenAI API Version\", advanced=True),\n        MessageTextInput(\n            name=\"openai_organization\",\n            display_name=\"OpenAI Organization\",\n            advanced=True,\n        ),\n        MessageTextInput(name=\"openai_proxy\", display_name=\"OpenAI Proxy\", advanced=True),\n        FloatInput(name=\"request_timeout\", display_name=\"Request Timeout\", advanced=True),\n        BoolInput(name=\"show_progress_bar\", display_name=\"Show Progress Bar\", advanced=True),\n        BoolInput(name=\"skip_empty\", display_name=\"Skip Empty\", advanced=True),\n        MessageTextInput(\n            name=\"tiktoken_model_name\",\n            display_name=\"TikToken Model Name\",\n            advanced=True,\n        ),\n        BoolInput(\n            name=\"tiktoken_enable\",\n            display_name=\"TikToken Enable\",\n            advanced=True,\n            value=True,\n            info=\"If False, you must have transformers installed.\",\n        ),\n        IntInput(\n            name=\"dimensions\",\n            display_name=\"Dimensions\",\n            info=\"The number of dimensions the resulting output embeddings should have. \"\n            \"Only supported by certain models.\",\n            advanced=True,\n        ),\n    ]\n\n    def build_embeddings(self) -> Embeddings:\n        return OpenAIEmbeddings(\n            client=self.client or None,\n            model=self.model,\n            dimensions=self.dimensions or None,\n            deployment=self.deployment or None,\n            api_version=self.openai_api_version or None,\n            base_url=self.openai_api_base or None,\n            openai_api_type=self.openai_api_type or None,\n            openai_proxy=self.openai_proxy or None,\n            embedding_ctx_length=self.embedding_ctx_length,\n            api_key=self.openai_api_key or None,\n            organization=self.openai_organization or None,\n            allowed_special=\"all\",\n            disallowed_special=\"all\",\n            chunk_size=self.chunk_size,\n            max_retries=self.max_retries,\n            timeout=self.request_timeout or None,\n            tiktoken_enabled=self.tiktoken_enable,\n            tiktoken_model_name=self.tiktoken_model_name or None,\n            show_progress_bar=self.show_progress_bar,\n            model_kwargs=self.model_kwargs,\n            skip_empty=self.skip_empty,\n            default_headers=self.default_headers or None,\n            default_query=self.default_query or None,\n        )\n",
+                "fileTypes": [],
+                "file_path": "",
+                "password": false,
+                "name": "code",
+                "advanced": true,
+                "dynamic": true,
+                "info": "",
+                "load_from_db": false,
+                "title_case": false
+              },
+              "default_headers": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "default_headers",
+                "value": {},
+                "display_name": "Default Headers",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Default headers to use for the API request.",
+                "title_case": false,
+                "type": "dict",
+                "_input_type": "DictInput"
+              },
+              "default_query": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "default_query",
+                "value": {},
+                "display_name": "Default Query",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Default query parameters to use for the API request.",
+                "title_case": false,
+                "type": "dict",
+                "_input_type": "DictInput"
+              },
+              "deployment": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "deployment",
+                "value": "",
+                "display_name": "Deployment",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "dimensions": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "dimensions",
+                "value": "",
+                "display_name": "Dimensions",
+                "advanced": true,
+                "dynamic": false,
+                "info": "The number of dimensions the resulting output embeddings should have. Only supported by certain models.",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "embedding_ctx_length": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "embedding_ctx_length",
+                "value": 1536,
+                "display_name": "Embedding Context Length",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "max_retries": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "max_retries",
+                "value": 3,
+                "display_name": "Max Retries",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "model": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "options": [
+                  "text-embedding-3-small",
+                  "text-embedding-3-large",
+                  "text-embedding-ada-002"
+                ],
+                "options_metadata": [],
+                "combobox": false,
+                "dialog_inputs": {},
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "model",
+                "value": "text-embedding-3-small",
+                "display_name": "Model",
+                "advanced": false,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "DropdownInput"
+              },
+              "model_kwargs": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "model_kwargs",
+                "value": {},
+                "display_name": "Model Kwargs",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "dict",
+                "_input_type": "DictInput"
+              },
+              "openai_api_base": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "openai_api_base",
+                "value": "",
+                "display_name": "OpenAI API Base",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "openai_api_key": {
+                "load_from_db": true,
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "openai_api_key",
+                "value": "",
+                "display_name": "OpenAI API Key",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "password": true,
+                "type": "str",
+                "_input_type": "SecretStrInput"
+              },
+              "openai_api_type": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "openai_api_type",
+                "value": "",
+                "display_name": "OpenAI API Type",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "openai_api_version": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "openai_api_version",
+                "value": "",
+                "display_name": "OpenAI API Version",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "openai_organization": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "openai_organization",
+                "value": "",
+                "display_name": "OpenAI Organization",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "openai_proxy": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "openai_proxy",
+                "value": "",
+                "display_name": "OpenAI Proxy",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "request_timeout": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "request_timeout",
+                "value": "",
+                "display_name": "Request Timeout",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "float",
+                "_input_type": "FloatInput"
+              },
+              "show_progress_bar": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "show_progress_bar",
+                "value": false,
+                "display_name": "Show Progress Bar",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "skip_empty": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "skip_empty",
+                "value": false,
+                "display_name": "Skip Empty",
+                "advanced": true,
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "tiktoken_enable": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "tiktoken_enable",
+                "value": true,
+                "display_name": "TikToken Enable",
+                "advanced": true,
+                "dynamic": false,
+                "info": "If False, you must have transformers installed.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "tiktoken_model_name": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "tiktoken_model_name",
+                "value": "",
+                "display_name": "TikToken Model Name",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              }
+            },
+            "description": "Generate embeddings using OpenAI models.",
+            "icon": "OpenAI",
+            "base_classes": [
+              "Embeddings"
+            ],
+            "display_name": "OpenAI Embeddings",
+            "documentation": "",
+            "minimized": false,
+            "custom_fields": {},
+            "output_types": [],
+            "pinned": false,
+            "conditional_paths": [],
+            "frozen": false,
+            "outputs": [
+              {
+                "types": [
+                  "Embeddings"
+                ],
+                "selected": "Embeddings",
+                "name": "embeddings",
+                "hidden": null,
+                "display_name": "Embeddings",
+                "method": "build_embeddings",
+                "value": "__UNDEFINED__",
+                "cache": true,
+                "required_inputs": [
+                  "openai_api_key"
+                ],
+                "allows_loop": false
+              }
+            ],
+            "field_order": [
+              "default_headers",
+              "default_query",
+              "chunk_size",
+              "client",
+              "deployment",
+              "embedding_ctx_length",
+              "max_retries",
+              "model",
+              "model_kwargs",
+              "openai_api_key",
+              "openai_api_base",
+              "openai_api_type",
+              "openai_api_version",
+              "openai_organization",
+              "openai_proxy",
+              "request_timeout",
+              "show_progress_bar",
+              "skip_empty",
+              "tiktoken_model_name",
+              "tiktoken_enable",
+              "dimensions"
+            ],
+            "beta": false,
+            "legacy": false,
+            "edited": false,
+            "metadata": {},
+            "tool_mode": false,
+            "lf_version": "1.1.3"
+          },
+          "type": "OpenAIEmbeddings",
+          "id": "OpenAIEmbeddings-Ag6y3"
+        },
+        "selected": false,
+        "measured": {
+          "width": 320,
+          "height": 310
+        }
+      },
+      {
+        "id": "Cassandra-WWAPt",
+        "type": "genericNode",
+        "position": {
+          "x": 1255.270084775456,
+          "y": 917.7454261529764
+        },
+        "data": {
+          "node": {
+            "template": {
+              "_type": "Component",
+              "embedding": {
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "embedding",
+                "value": "",
+                "display_name": "Embedding",
+                "advanced": false,
+                "input_types": [
+                  "Embeddings"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "other",
+                "_input_type": "HandleInput"
+              },
+              "ingest_data": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "trace_as_input": true,
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "ingest_data",
+                "value": "",
+                "display_name": "Ingest Data",
+                "advanced": false,
+                "input_types": [
+                  "Data"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "other",
+                "_input_type": "DataInput"
+              },
+              "batch_size": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "batch_size",
+                "value": 16,
+                "display_name": "Batch Size",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Optional number of data to process in a single batch.",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "body_search": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "body_search",
+                "value": "",
+                "display_name": "Search Body",
+                "advanced": true,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Document textual search terms to apply to the search query.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "cluster_kwargs": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "list": true,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "cluster_kwargs",
+                "value": {},
+                "display_name": "Cluster arguments",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Optional dictionary of additional keyword arguments for the Cassandra cluster.",
+                "title_case": false,
+                "type": "dict",
+                "_input_type": "DictInput"
+              },
+              "code": {
+                "type": "code",
+                "required": true,
+                "placeholder": "",
+                "list": false,
+                "show": true,
+                "multiline": true,
+                "value": "from langchain_community.vectorstores import Cassandra\n\nfrom langflow.base.vectorstores.model import LCVectorStoreComponent, check_cached_vector_store\nfrom langflow.helpers.data import docs_to_data\nfrom langflow.inputs import BoolInput, DictInput, FloatInput\nfrom langflow.io import (\n    DropdownInput,\n    HandleInput,\n    IntInput,\n    MessageTextInput,\n    SecretStrInput,\n)\nfrom langflow.schema import Data\n\n\nclass CassandraVectorStoreComponent(LCVectorStoreComponent):\n    display_name = \"Cassandra\"\n    description = \"Cassandra Vector Store with search capabilities\"\n    documentation = \"https://python.langchain.com/docs/modules/data_connection/vectorstores/integrations/cassandra\"\n    name = \"Cassandra\"\n    icon = \"Cassandra\"\n\n    inputs = [\n        MessageTextInput(\n            name=\"database_ref\",\n            display_name=\"Contact Points / Astra Database ID\",\n            info=\"Contact points for the database (or AstraDB database ID)\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"username\", display_name=\"Username\", info=\"Username for the database (leave empty for AstraDB).\"\n        ),\n        SecretStrInput(\n            name=\"token\",\n            display_name=\"Password / AstraDB Token\",\n            info=\"User password for the database (or AstraDB token).\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"keyspace\",\n            display_name=\"Keyspace\",\n            info=\"Table Keyspace (or AstraDB namespace).\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"table_name\",\n            display_name=\"Table Name\",\n            info=\"The name of the table (or AstraDB collection) where vectors will be stored.\",\n            required=True,\n        ),\n        IntInput(\n            name=\"ttl_seconds\",\n            display_name=\"TTL Seconds\",\n            info=\"Optional time-to-live for the added texts.\",\n            advanced=True,\n        ),\n        IntInput(\n            name=\"batch_size\",\n            display_name=\"Batch Size\",\n            info=\"Optional number of data to process in a single batch.\",\n            value=16,\n            advanced=True,\n        ),\n        DropdownInput(\n            name=\"setup_mode\",\n            display_name=\"Setup Mode\",\n            info=\"Configuration mode for setting up the Cassandra table, with options like 'Sync', 'Async', or 'Off'.\",\n            options=[\"Sync\", \"Async\", \"Off\"],\n            value=\"Sync\",\n            advanced=True,\n        ),\n        DictInput(\n            name=\"cluster_kwargs\",\n            display_name=\"Cluster arguments\",\n            info=\"Optional dictionary of additional keyword arguments for the Cassandra cluster.\",\n            advanced=True,\n            list=True,\n        ),\n        *LCVectorStoreComponent.inputs,\n        HandleInput(name=\"embedding\", display_name=\"Embedding\", input_types=[\"Embeddings\"]),\n        IntInput(\n            name=\"number_of_results\",\n            display_name=\"Number of Results\",\n            info=\"Number of results to return.\",\n            value=4,\n            advanced=True,\n        ),\n        DropdownInput(\n            name=\"search_type\",\n            display_name=\"Search Type\",\n            info=\"Search type to use\",\n            options=[\"Similarity\", \"Similarity with score threshold\", \"MMR (Max Marginal Relevance)\"],\n            value=\"Similarity\",\n            advanced=True,\n        ),\n        FloatInput(\n            name=\"search_score_threshold\",\n            display_name=\"Search Score Threshold\",\n            info=\"Minimum similarity score threshold for search results. \"\n            \"(when using 'Similarity with score threshold')\",\n            value=0,\n            advanced=True,\n        ),\n        DictInput(\n            name=\"search_filter\",\n            display_name=\"Search Metadata Filter\",\n            info=\"Optional dictionary of filters to apply to the search query.\",\n            advanced=True,\n            list=True,\n        ),\n        MessageTextInput(\n            name=\"body_search\",\n            display_name=\"Search Body\",\n            info=\"Document textual search terms to apply to the search query.\",\n            advanced=True,\n        ),\n        BoolInput(\n            name=\"enable_body_search\",\n            display_name=\"Enable Body Search\",\n            info=\"Flag to enable body search. This must be enabled BEFORE the table is created.\",\n            value=False,\n            advanced=True,\n        ),\n    ]\n\n    @check_cached_vector_store\n    def build_vector_store(self) -> Cassandra:\n        try:\n            import cassio\n            from langchain_community.utilities.cassandra import SetupMode\n        except ImportError as e:\n            msg = \"Could not import cassio integration package. Please install it with `pip install cassio`.\"\n            raise ImportError(msg) from e\n\n        from uuid import UUID\n\n        database_ref = self.database_ref\n\n        try:\n            UUID(self.database_ref)\n            is_astra = True\n        except ValueError:\n            is_astra = False\n            if \",\" in self.database_ref:\n                # use a copy because we can't change the type of the parameter\n                database_ref = self.database_ref.split(\",\")\n\n        if is_astra:\n            cassio.init(\n                database_id=database_ref,\n                token=self.token,\n                cluster_kwargs=self.cluster_kwargs,\n            )\n        else:\n            cassio.init(\n                contact_points=database_ref,\n                username=self.username,\n                password=self.token,\n                cluster_kwargs=self.cluster_kwargs,\n            )\n        documents = []\n\n        for _input in self.ingest_data or []:\n            if isinstance(_input, Data):\n                documents.append(_input.to_lc_document())\n            else:\n                documents.append(_input)\n\n        body_index_options = [(\"index_analyzer\", \"STANDARD\")] if self.enable_body_search else None\n\n        if self.setup_mode == \"Off\":\n            setup_mode = SetupMode.OFF\n        elif self.setup_mode == \"Sync\":\n            setup_mode = SetupMode.SYNC\n        else:\n            setup_mode = SetupMode.ASYNC\n\n        if documents:\n            self.log(f\"Adding {len(documents)} documents to the Vector Store.\")\n            table = Cassandra.from_documents(\n                documents=documents,\n                embedding=self.embedding,\n                table_name=self.table_name,\n                keyspace=self.keyspace,\n                ttl_seconds=self.ttl_seconds or None,\n                body_index_options=body_index_options,\n            )\n        else:\n            self.log(\"No documents to add to the Vector Store.\")\n            table = Cassandra(\n                embedding=self.embedding,\n                table_name=self.table_name,\n                keyspace=self.keyspace,\n                ttl_seconds=self.ttl_seconds or None,\n                body_index_options=body_index_options,\n                setup_mode=setup_mode,\n            )\n        return table\n\n    def _map_search_type(self) -> str:\n        if self.search_type == \"Similarity with score threshold\":\n            return \"similarity_score_threshold\"\n        if self.search_type == \"MMR (Max Marginal Relevance)\":\n            return \"mmr\"\n        return \"similarity\"\n\n    def search_documents(self) -> list[Data]:\n        vector_store = self.build_vector_store()\n\n        self.log(f\"Search input: {self.search_query}\")\n        self.log(f\"Search type: {self.search_type}\")\n        self.log(f\"Number of results: {self.number_of_results}\")\n\n        if self.search_query and isinstance(self.search_query, str) and self.search_query.strip():\n            try:\n                search_type = self._map_search_type()\n                search_args = self._build_search_args()\n\n                self.log(f\"Search args: {search_args}\")\n\n                docs = vector_store.search(query=self.search_query, search_type=search_type, **search_args)\n            except KeyError as e:\n                if \"content\" in str(e):\n                    msg = (\n                        \"You should ingest data through Langflow (or LangChain) to query it in Langflow. \"\n                        \"Your collection does not contain a field name 'content'.\"\n                    )\n                    raise ValueError(msg) from e\n                raise\n\n            self.log(f\"Retrieved documents: {len(docs)}\")\n\n            data = docs_to_data(docs)\n            self.status = data\n            return data\n        return []\n\n    def _build_search_args(self):\n        args = {\n            \"k\": self.number_of_results,\n            \"score_threshold\": self.search_score_threshold,\n        }\n\n        if self.search_filter:\n            clean_filter = {k: v for k, v in self.search_filter.items() if k and v}\n            if len(clean_filter) > 0:\n                args[\"filter\"] = clean_filter\n        if self.body_search:\n            if not self.enable_body_search:\n                msg = \"You should enable body search when creating the table to search the body field.\"\n                raise ValueError(msg)\n            args[\"body_search\"] = self.body_search\n        return args\n\n    def get_retriever_kwargs(self):\n        search_args = self._build_search_args()\n        return {\n            \"search_type\": self._map_search_type(),\n            \"search_kwargs\": search_args,\n        }\n",
+                "fileTypes": [],
+                "file_path": "",
+                "password": false,
+                "name": "code",
+                "advanced": true,
+                "dynamic": true,
+                "info": "",
+                "load_from_db": false,
+                "title_case": false
+              },
+              "database_ref": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "database_ref",
+                "value": "10.0.0.14",
+                "display_name": "Contact Points / Astra Database ID",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Contact points for the database (or AstraDB database ID)",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "enable_body_search": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "enable_body_search",
+                "value": false,
+                "display_name": "Enable Body Search",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Flag to enable body search. This must be enabled BEFORE the table is created.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "keyspace": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "keyspace",
+                "value": "transactions_keyspace",
+                "display_name": "Keyspace",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Table Keyspace (or AstraDB namespace).",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "number_of_results": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "number_of_results",
+                "value": 4,
+                "display_name": "Number of Results",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Number of results to return.",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "search_filter": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "list": true,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "search_filter",
+                "value": {},
+                "display_name": "Search Metadata Filter",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Optional dictionary of filters to apply to the search query.",
+                "title_case": false,
+                "type": "dict",
+                "_input_type": "DictInput"
+              },
+              "search_query": {
+                "tool_mode": true,
+                "trace_as_input": true,
+                "multiline": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "search_query",
+                "value": "",
+                "display_name": "Search Query",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MultilineInput"
+              },
+              "search_score_threshold": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "search_score_threshold",
+                "value": 0,
+                "display_name": "Search Score Threshold",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Minimum similarity score threshold for search results. (when using 'Similarity with score threshold')",
+                "title_case": false,
+                "type": "float",
+                "_input_type": "FloatInput"
+              },
+              "search_type": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "options": [
+                  "Similarity",
+                  "Similarity with score threshold",
+                  "MMR (Max Marginal Relevance)"
+                ],
+                "options_metadata": [],
+                "combobox": false,
+                "dialog_inputs": {},
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "search_type",
+                "value": "Similarity",
+                "display_name": "Search Type",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Search type to use",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "DropdownInput"
+              },
+              "setup_mode": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "options": [
+                  "Sync",
+                  "Async",
+                  "Off"
+                ],
+                "options_metadata": [],
+                "combobox": false,
+                "dialog_inputs": {},
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "setup_mode",
+                "value": "Sync",
+                "display_name": "Setup Mode",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Configuration mode for setting up the Cassandra table, with options like 'Sync', 'Async', or 'Off'.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "DropdownInput"
+              },
+              "table_name": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "table_name",
+                "value": "vector_store",
+                "display_name": "Table Name",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "The name of the table (or AstraDB collection) where vectors will be stored.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "token": {
+                "load_from_db": false,
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "token",
+                "value": "",
+                "display_name": "Password / AstraDB Token",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "User password for the database (or AstraDB token).",
+                "title_case": false,
+                "password": true,
+                "type": "str",
+                "_input_type": "SecretStrInput"
+              },
+              "ttl_seconds": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "ttl_seconds",
+                "value": "",
+                "display_name": "TTL Seconds",
+                "advanced": true,
+                "dynamic": false,
+                "info": "Optional time-to-live for the added texts.",
+                "title_case": false,
+                "type": "int",
+                "_input_type": "IntInput"
+              },
+              "username": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "username",
+                "value": "demo-superuser",
+                "display_name": "Username",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Username for the database (leave empty for AstraDB).",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              }
+            },
+            "description": "Cassandra Vector Store with search capabilities",
+            "icon": "Cassandra",
+            "base_classes": [
+              "Data",
+              "DataFrame"
+            ],
+            "display_name": "Cassandra",
+            "documentation": "https://python.langchain.com/docs/modules/data_connection/vectorstores/integrations/cassandra",
+            "minimized": false,
+            "custom_fields": {},
+            "output_types": [],
+            "pinned": false,
+            "conditional_paths": [],
+            "frozen": false,
+            "outputs": [
+              {
+                "types": [
+                  "Data"
+                ],
+                "selected": "Data",
+                "name": "search_results",
+                "hidden": null,
+                "display_name": "Search Results",
+                "method": "search_documents",
+                "value": "__UNDEFINED__",
+                "cache": true,
+                "required_inputs": [
+                  "database_ref",
+                  "keyspace",
+                  "table_name",
+                  "token"
+                ],
+                "allows_loop": false
+              },
+              {
+                "types": [
+                  "DataFrame"
+                ],
+                "selected": "DataFrame",
+                "name": "dataframe",
+                "hidden": null,
+                "display_name": "DataFrame",
+                "method": "as_dataframe",
+                "value": "__UNDEFINED__",
+                "cache": true,
+                "required_inputs": [],
+                "allows_loop": false
+              }
+            ],
+            "field_order": [
+              "database_ref",
+              "username",
+              "token",
+              "keyspace",
+              "table_name",
+              "ttl_seconds",
+              "batch_size",
+              "setup_mode",
+              "cluster_kwargs",
+              "ingest_data",
+              "search_query",
+              "embedding",
+              "number_of_results",
+              "search_type",
+              "search_score_threshold",
+              "search_filter",
+              "body_search",
+              "enable_body_search"
+            ],
+            "beta": false,
+            "legacy": false,
+            "edited": true,
+            "metadata": {},
+            "tool_mode": false,
+            "lf_version": "1.1.3"
+          },
+          "type": "Cassandra",
+          "id": "Cassandra-WWAPt"
+        },
+        "selected": true,
+        "measured": {
+          "width": 320,
+          "height": 797
+        }
+      }
+    ],
+    "edges": [
+      {
+        "source": "File-TrMg4",
+        "target": "CSVLoader-yuTmY",
+        "sourceHandle": "{œdataTypeœ:œFileœ,œidœ:œFile-TrMg4œ,œnameœ:œdataœ,œoutput_typesœ:[œDataœ]}",
+        "targetHandle": "{œfieldNameœ:œfile_contentœ,œidœ:œCSVLoader-yuTmYœ,œinputTypesœ:[œDataœ],œtypeœ:œotherœ}",
+        "id": "reactflow__edge-File-TrMg4{œdataTypeœ:œFileœ,œidœ:œFile-TrMg4œ,œnameœ:œdataœ,œoutput_typesœ:[œDataœ]}-CSVLoader-yuTmY{œfieldNameœ:œfile_contentœ,œidœ:œCSVLoader-yuTmYœ,œinputTypesœ:[œDataœ],œtypeœ:œotherœ}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "File",
+            "id": "File-TrMg4",
+            "name": "data",
+            "output_types": [
+              "Data"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "file_content",
+            "id": "CSVLoader-yuTmY",
+            "inputTypes": [
+              "Data"
+            ],
+            "type": "other"
+          }
+        },
+        "selected": false
+      },
+      {
+        "source": "OpenAIEmbeddings-Ag6y3",
+        "target": "Cassandra-WWAPt",
+        "sourceHandle": "{œdataTypeœ:œOpenAIEmbeddingsœ,œidœ:œOpenAIEmbeddings-Ag6y3œ,œnameœ:œembeddingsœ,œoutput_typesœ:[œEmbeddingsœ]}",
+        "targetHandle": "{œfieldNameœ:œembeddingœ,œidœ:œCassandra-WWAPtœ,œinputTypesœ:[œEmbeddingsœ],œtypeœ:œotherœ}",
+        "id": "reactflow__edge-OpenAIEmbeddings-Ag6y3{œdataTypeœ:œOpenAIEmbeddingsœ,œidœ:œOpenAIEmbeddings-Ag6y3œ,œnameœ:œembeddingsœ,œoutput_typesœ:[œEmbeddingsœ]}-Cassandra-WWAPt{œfieldNameœ:œembeddingœ,œidœ:œCassandra-WWAPtœ,œinputTypesœ:[œEmbeddingsœ],œtypeœ:œotherœ}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "OpenAIEmbeddings",
+            "id": "OpenAIEmbeddings-Ag6y3",
+            "name": "embeddings",
+            "output_types": [
+              "Embeddings"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "embedding",
+            "id": "Cassandra-WWAPt",
+            "inputTypes": [
+              "Embeddings"
+            ],
+            "type": "other"
+          }
+        },
+        "selected": false
+      },
+      {
+        "source": "CSVLoader-yuTmY",
+        "target": "Cassandra-WWAPt",
+        "sourceHandle": "{œdataTypeœ:œCSVLoaderœ,œidœ:œCSVLoader-yuTmYœ,œnameœ:œformatted_outputœ,œoutput_typesœ:[œDataœ]}",
+        "targetHandle": "{œfieldNameœ:œingest_dataœ,œidœ:œCassandra-WWAPtœ,œinputTypesœ:[œDataœ],œtypeœ:œotherœ}",
+        "id": "reactflow__edge-CSVLoader-yuTmY{œdataTypeœ:œCSVLoaderœ,œidœ:œCSVLoader-yuTmYœ,œnameœ:œformatted_outputœ,œoutput_typesœ:[œDataœ]}-Cassandra-WWAPt{œfieldNameœ:œingest_dataœ,œidœ:œCassandra-WWAPtœ,œinputTypesœ:[œDataœ],œtypeœ:œotherœ}",
+        "data": {
+          "sourceHandle": {
+            "dataType": "CSVLoader",
+            "id": "CSVLoader-yuTmY",
+            "name": "formatted_output",
+            "output_types": [
+              "Data"
+            ]
+          },
+          "targetHandle": {
+            "fieldName": "ingest_data",
+            "id": "Cassandra-WWAPt",
+            "inputTypes": [
+              "Data"
+            ],
+            "type": "other"
+          }
+        },
+        "selected": false
+      }
+    ],
+    "viewport": {
+      "x": -413.7755487470316,
+      "y": -725.0386102806865,
+      "zoom": 0.7557599649574489
+    }
+  },
+  "description": "Process the data for the analyze transactions demo",
+  "name": "Analyze Transactions - Process Data",
+  "last_tested_version": "1.1.3",
+  "endpoint_name": null,
+  "is_component": false
+}
