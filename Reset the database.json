@@ -1,0 +1,236 @@
+{
+  "id": "5310f86f-561b-42ad-8caa-f306f3ac16e6",
+  "data": {
+    "nodes": [
+      {
+        "id": "CustomComponent-9Fz27",
+        "type": "genericNode",
+        "position": {
+          "x": 303.62276093842775,
+          "y": 55.368282815283166
+        },
+        "data": {
+          "node": {
+            "template": {
+              "_type": "Component",
+              "code": {
+                "type": "code",
+                "required": true,
+                "placeholder": "",
+                "list": false,
+                "show": true,
+                "multiline": true,
+                "value": "from langflow.custom import Component\nfrom langflow.io import MessageTextInput, BoolInput, Output\nfrom cassandra.cluster import Cluster\nfrom cassandra.auth import PlainTextAuthProvider\nimport logging\n\nclass ResetDatabaseComponent(Component):\n    # Metadata for the component\n    display_name = \"Reset Database\"\n    description = \"Drops and recreates a Cassandra keyspace and table with indexes.\"\n    documentation: str = \"http://docs.langflow.org/components/custom\"\n    icon = \"database\"\n    name = \"ResetDatabase\"\n\n    # Inputs: Define the input fields for the component\n    inputs = [\n        MessageTextInput(\n            name=\"keyspace\",\n            display_name=\"Keyspace\",\n            info=\"The keyspace to reset.\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"table_name\",\n            display_name=\"Table Name\",\n            info=\"The table to reset within the keyspace.\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"contact_points\",\n            display_name=\"Contact Points\",\n            info=\"Cassandra contact points (comma-separated).\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"username\",\n            display_name=\"Username\",\n            info=\"Cassandra username.\",\n            required=True,\n        ),\n        MessageTextInput(\n            name=\"password\",\n            display_name=\"Password\",\n            info=\"Cassandra password.\",\n            required=True,\n        ),\n        BoolInput(\n            name=\"create_indexes\",\n            display_name=\"Create Indexes\",\n            info=\"Whether to create the indexes after resetting the table.\",\n            value=True,\n        ),\n    ]\n\n    # Outputs: Define the output fields for the component\n    outputs = [\n        Output(\n            name=\"status\",\n            display_name=\"Status\",\n            method=\"reset_database\",\n        ),\n    ]\n\n    def __init__(self, *args, **kwargs):\n        # Call the parent constructor\n        super().__init__(*args, **kwargs)\n        # Initialize logging\n        logging.basicConfig(level=logging.INFO)\n        self.logger = logging.getLogger(self.name)\n\n    # Component logic: Define the method to reset the database\n    def reset_database(self) -> str:\n        # Get inputs\n        keyspace = self.keyspace\n        table_name = self.table_name\n        contact_points = self.contact_points.split(\",\")\n        username = self.username\n        password = self.password\n        create_indexes = self.create_indexes\n\n        # Log inputs\n        self.logger.info(f\"Starting reset for keyspace '{keyspace}' and table '{table_name}'.\")\n        self.logger.info(f\"Contact points: {contact_points}\")\n\n        # Connect to Cassandra\n        self.logger.info(\"Connecting to Cassandra...\")\n        auth_provider = PlainTextAuthProvider(username=username, password=password)\n        cluster = Cluster(contact_points=contact_points, auth_provider=auth_provider)\n        session = cluster.connect()\n\n        try:\n            # Drop indexes if they exist\n            self.logger.info(\"Dropping indexes if they exist...\")\n            session.set_keyspace(keyspace)\n            session.execute(f\"DROP INDEX IF EXISTS {keyspace}.eidx_metadata_s_{table_name};\")\n            self.logger.info(\"Dropped index eidx_metadata_s.\")\n            session.execute(f\"DROP INDEX IF EXISTS {keyspace}.idx_vector_{table_name};\")\n            self.logger.info(\"Dropped index idx_vector.\")\n\n            # Drop the table\n            self.logger.info(\"Dropping table...\")\n            session.execute(f\"DROP TABLE IF EXISTS {keyspace}.{table_name};\")\n            self.logger.info(f\"Table '{table_name}' dropped successfully.\")\n\n            # Recreate the table\n            self.logger.info(\"Recreating table...\")\n            session.execute(f\"\"\"\n                CREATE TABLE {keyspace}.{table_name} (\n                    row_id text PRIMARY KEY,\n                    attributes_blob text,\n                    body_blob text,\n                    metadata_s map<text, text>,\n                    vector vector<float, 1536>,\n                    transaction_date date,\n                    account text,\n                    description text,\n                    category text,\n                    tags text,\n                    amount decimal\n                );\n            \"\"\")\n            self.logger.info(f\"Table '{table_name}' created successfully.\")\n\n            # Recreate indexes if specified\n            if create_indexes:\n                self.logger.info(\"Creating indexes...\")\n                session.execute(f\"\"\"\n                    CREATE CUSTOM INDEX eidx_metadata_s_{table_name} \n                    ON {keyspace}.{table_name} (entries(metadata_s))\n                    USING 'org.apache.cassandra.index.sai.StorageAttachedIndex';\n                \"\"\")\n                self.logger.info(f\"Index 'eidx_metadata_s_{table_name}' created successfully.\")\n                session.execute(f\"\"\"\n                    CREATE CUSTOM INDEX idx_vector_{table_name} \n                    ON {keyspace}.{table_name} (vector)\n                    USING 'org.apache.cassandra.index.sai.StorageAttachedIndex';\n                \"\"\")\n                self.logger.info(f\"Index 'idx_vector_{table_name}' created successfully.\")\n\n            self.logger.info(f\"Keyspace '{keyspace}' and table '{table_name}' have been reset successfully.\")\n            return f\"Keyspace '{keyspace}' and table '{table_name}' have been reset successfully.\"\n\n        except Exception as e:\n            self.logger.error(f\"Error resetting database: {str(e)}\")\n            return f\"Error resetting database: {str(e)}\"\n\n        finally:\n            # Close the connection\n            self.logger.info(\"Closing Cassandra connection...\")\n            cluster.shutdown()\n",
+                "fileTypes": [],
+                "file_path": "",
+                "password": false,
+                "name": "code",
+                "advanced": true,
+                "dynamic": true,
+                "info": "",
+                "load_from_db": false,
+                "title_case": false
+              },
+              "contact_points": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "contact_points",
+                "value": "10.0.0.14",
+                "display_name": "Contact Points",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Cassandra contact points (comma-separated).",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "create_indexes": {
+                "tool_mode": false,
+                "trace_as_metadata": true,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": false,
+                "placeholder": "",
+                "show": true,
+                "name": "create_indexes",
+                "value": true,
+                "display_name": "Create Indexes",
+                "advanced": false,
+                "dynamic": false,
+                "info": "Whether to create the indexes after resetting the table.",
+                "title_case": false,
+                "type": "bool",
+                "_input_type": "BoolInput"
+              },
+              "keyspace": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "keyspace",
+                "value": "transactions_keyspace",
+                "display_name": "Keyspace",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "The keyspace to reset.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "password": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "password",
+                "value": "password",
+                "display_name": "Password",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Cassandra password.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "table_name": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "table_name",
+                "value": "transactions",
+                "display_name": "Table Name",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "The table to reset within the keyspace.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              },
+              "username": {
+                "tool_mode": false,
+                "trace_as_input": true,
+                "trace_as_metadata": true,
+                "load_from_db": false,
+                "list": false,
+                "list_add_label": "Add More",
+                "required": true,
+                "placeholder": "",
+                "show": true,
+                "name": "username",
+                "value": "demo-superuser",
+                "display_name": "Username",
+                "advanced": false,
+                "input_types": [
+                  "Message"
+                ],
+                "dynamic": false,
+                "info": "Cassandra username.",
+                "title_case": false,
+                "type": "str",
+                "_input_type": "MessageTextInput"
+              }
+            },
+            "description": "Drops and recreates a Cassandra keyspace and table with indexes.",
+            "icon": "database",
+            "base_classes": [
+              "Text"
+            ],
+            "display_name": "Reset Database",
+            "documentation": "http://docs.langflow.org/components/custom",
+            "minimized": false,
+            "custom_fields": {},
+            "output_types": [],
+            "pinned": false,
+            "conditional_paths": [],
+            "frozen": false,
+            "outputs": [
+              {
+                "types": [
+                  "Text"
+                ],
+                "selected": "Text",
+                "name": "status",
+                "hidden": null,
+                "display_name": "Status",
+                "method": "reset_database",
+                "value": "__UNDEFINED__",
+                "cache": true,
+                "required_inputs": null,
+                "allows_loop": false
+              }
+            ],
+            "field_order": [
+              "keyspace",
+              "table_name",
+              "contact_points",
+              "username",
+              "password",
+              "create_indexes"
+            ],
+            "beta": false,
+            "legacy": false,
+            "edited": true,
+            "metadata": {},
+            "tool_mode": false,
+            "lf_version": "1.1.4"
+          },
+          "showNode": true,
+          "type": "ResetDatabase",
+          "id": "CustomComponent-9Fz27"
+        },
+        "selected": true,
+        "measured": {
+          "width": 320,
+          "height": 621
+        },
+        "dragging": false
+      }
+    ],
+    "edges": [],
+    "viewport": {
+      "x": 137.68020937119263,
+      "y": 53.86570744722803,
+      "zoom": 0.691595318894313
+    }
+  },
+  "description": "Deletes the table, indexes, and keyspace",
+  "name": "Reset the database",
+  "last_tested_version": "1.1.4",
+  "endpoint_name": null,
+  "is_component": false
+}

@@ -1,0 +1,23 @@
+Context:
+{context}
+
+Based on the context provided above, analyze the transactions and provide a comprehensive summary. Your response should include:
+
+    Summary of Key Metrics:
+        The lowest transaction amount and its details.
+        The highest transaction amount and its details.
+
+    Interesting Insights:
+        Identify any unusual or noteworthy patterns in the transactions.
+
+    Recurring Accounts:
+        List accounts with recurring transactions and provide their frequency (e.g., weekly, monthly).
+
+    Additional Observations:
+        Highlight any anomalies, trends, or potential areas of optimization in the transactions.
+
+Question:
+{question}
+
+Answer:
+

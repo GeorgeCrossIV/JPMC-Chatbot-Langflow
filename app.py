@@ -3,7 +3,7 @@ import requests
 
 app = Flask(__name__)
 
-LANGFLOW_API_URL = "http://gmc-platform0.eastus.cloudapp.azure.com:7860/api/v1/run/25ca2bf5-b646-461c-b4a7-545a01c9ff91?stream=false"
+LANGFLOW_API_URL = "http://gmc-platform0.eastus.cloudapp.azure.com:7860/api/v1/run/d560aad0-97ab-4df9-97b9-d298994e9516?stream=false"
 
 @app.route('/')
 def home():
